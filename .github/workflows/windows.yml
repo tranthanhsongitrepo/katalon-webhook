@@ -1,0 +1,45 @@
+name: CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Katalon Studio Github Action
+      id: katalon # Assign an ID to refer to this step later
+      uses: katalon-studio/katalon-studio-github-action@v4.0
+      with:
+        version: '9.6.0'
+        projectPath: '${{ github.workspace }}/My First Web UI Project (1).prj'
+        args: '-noSplash -retry=0 -testSuitePath="Test Suites/New Test Suite" -browserType="Chrome" -executionProfile="default" -apiKey="20c1930a-65aa-4e94-9494-96c83f0e2549" -testOpsProjectId=1552221 > ${{ github.workspace }}/katalon.log'
+        # Print the output file contents
+    - name: View Katalon output
+      run: dir ${{ github.workspace }}
+    - name: Extract metadata
+      id: extract
+      if: always()
+      run: |
+        echo "Current working directory: %cd%"
+        echo "Listing files in the working directory:"
+        ls ${{ github.workspace }}
+        echo "${{ steps.katalon.outputs.conclusion }}"
+        # echo "execution_url=$(cat katalon.log | grep -oP '(?<=Execution URL: )https?://[^\s,]+')" >> $GITHUB_OUTPUT
+        echo "Finished listing files."
+    # Notify webhook after job completion
+    - name: Notify webhook
+      if: always() # Ensure this runs even if the previous steps fail
+      uses: fjogeleit/http-request-action@v1
+      with:
+        url: https://webhook.site/34fbf726-97d0-4c9e-9bdf-9fe577f46770
+        method: POST
+        contentType: application/json
+        data: >
+          {
+            "execution_url": "${{ steps.extract.outputs.execution_url}}"
+          }

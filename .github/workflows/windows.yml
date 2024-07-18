@@ -25,7 +25,9 @@ jobs:
       id: extract
       if: always()
       run: |
-        echo "execution_url=$(cat katalon.log | grep -oP '(?<=Execution URL: )https?://[^\s,]+')" >> $GITHUB_OUTPUT
+        # echo "execution_url=$(cat katalon.log | grep -oP '(?<=Execution URL: )https?://[^\s,]+')" >> $GITHUB_OUTPUT
+        echo "execution_url=$(perl -nle 'print $& if /(?<=Execution URL: )https?:\/\/[^\s,]+/' ${{ github.workspace }}/katalon.log)" >> $GITHUB_OUTPUT
+
     # Notify webhook after job completion
     - name: Notify webhook
       if: always() # Ensure this runs even if the previous steps fail
